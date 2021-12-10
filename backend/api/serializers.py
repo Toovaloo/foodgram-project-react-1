@@ -1,5 +1,9 @@
+from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from djoser.serializers import UserSerializer
+
+from tests.test_00_users import User
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -14,3 +18,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data.pop('access', None)
         data['auth_token'] = str(refresh.access_token)
         return data
+
+
+class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed',
+        )
+
+    def get_is_subscribed(self, obj):
+        return False
