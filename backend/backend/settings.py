@@ -1,13 +1,18 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-8uwg*zoy-kdgg9%vch0s9(kyza18b#m#)jdq_4eh2sar33i129'
+SECRET_KEY = os.getenv('SECRET_KEY', default='change-me')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', default='false') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('HOSTNAMES', default='localhost').split(' ')
+
+DOMAIN_NAME = os.getenv('DOMAIN_NAME', default='localhost')
+
+CSRF_TRUSTED_ORIGINS = (f'http://{DOMAIN_NAME}',)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -33,7 +38,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
     {
@@ -55,8 +60,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -85,8 +94,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
@@ -103,9 +110,19 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('Bearer', 'Token',),
 }
 
 DJOSER = {
     'LOGIN_FIELD': 'email'
 }
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'assets'),
+)
+STATIC_URL = '/api/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = '/api/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
