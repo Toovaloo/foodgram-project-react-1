@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import CustomTokenObtainPairSerializer
 
@@ -17,4 +17,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         except TokenError as e:
             return Response(e.args[0], status=status.HTTP_404_NOT_FOUND)
 
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+        return Response(
+            serializer.validated_data, status=status.HTTP_201_CREATED
+        )
