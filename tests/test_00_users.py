@@ -166,3 +166,47 @@ class Test00Users:
         )
 
         new_user.delete()
+
+    @pytest.mark.django_db(transaction=True)
+    def test_00_user_profile_not_authenticatd(self, client, user):
+        response = client.get(f'{self.url}{user.id}/')
+        assert response.status_code != 404, (
+            f'Страница `{self.url}{user.id}` не найдена, проверьте этот адрес в *urls.py*'
+        )
+        assert response.status_code == 401, (
+            f'Проверьте, что при попытке получить профиль пользователя без авторизации '
+            'возвращается статус 401'
+        )
+
+    @pytest.mark.django_db(transaction=True)
+    def test_00_user_profile_authenticated(self, auth_user_client, user):
+        auth_user_client.force_login(user)
+        response = auth_user_client.get(f'{self.url}{user.id}/')
+        assert response.status_code != 404, (
+            f'Страница `{self.url}{user.id}` не найдена, проверьте этот адрес в *urls.py*'
+        )
+        assert response.status_code == 200, (
+            f'Проверьте, что при GET запросе `{self.url}{user.id}/` с токеном авторизации возвращается статус 200'
+        )
+        data = response.json()
+        assert (
+            data.get('username') == user.username
+            and data.get('email') == user.email
+            and data.get('first_name') == user.first_name
+            and data.get('last_name') == user.last_name
+        ), (
+            f'Проверьте, что при GET запросе `{self.url}{user.id}/` '
+            f'возвращается профиль пользователя с валидными данными'
+        )
+        hidden_fields = ['password', ]
+        for field in hidden_fields:
+            assert field not in data.keys(), (
+                f'Проверьте, что при ПУЕ запросе `{self.url}{user.id}/`'
+                f'возвращяются только предусмотренные спецификацией поля.'
+            )
+        unknown_id = User.objects.latest('pk').pk + 1
+        response = auth_user_client.get(f'{self.url}{unknown_id}/')
+        assert response.status_code == 404, (
+            f'Проверьте, что при GET запросе `{self.url}{unknown_id}/` c id '
+            f'несуществующего пользователя возвращается статус 404'
+        )
