@@ -1,3 +1,4 @@
+from attr import resolve_types
 from django.utils import translation
 import pytest
 
@@ -209,4 +210,30 @@ class Test00Users:
         assert response.status_code == 404, (
             f'Проверьте, что при GET запросе `{self.url}{unknown_id}/` c id '
             f'несуществующего пользователя возвращается статус 404'
+        )
+
+    @pytest.mark.django_db(transaction=True)
+    def test_00_user_me_get_authenticated(self, auth_user_client, user):
+        response = auth_user_client.get('/api/users/me/')
+        assert response.status_code == 200, (
+            f'Проверьте, что при GET запросе `/api/users/me/` с токеном авторизации возвращается статус 200'
+        )
+        data = response.json()
+        assert data.get('username') == user.username, (
+            f'Проверьте, что при GET запросе `/api/users/me/` возвращаете данные пользователя'
+        )
+        assert data.get('email') == user.email, (
+            'Проверьте, что при GET запросе `/api/users/me/` возвращаете данные пользователя'
+        )
+        assert data.get('first_name') == user.first_name, (
+            'Проверьте, что при GET запросе `/api/users/me/` возвращаете данные пользователя'
+        )
+        assert data.get('last_name') == user.last_name, (
+            'Проверьте, что при GET запросе `/api/users/me/` возвращаете данные пользователя'
+        )
+        assert data.get('id') == user.id, (
+            'Проверьте, что при GET запросе `/api/users/me/` возвращаете данные пользователя'
+        )
+        assert data.get('is_subscribed') == False, (
+            'Проверьте, что при GET запросе `/api/users/me/` возвращаете данные пользователя'
         )
